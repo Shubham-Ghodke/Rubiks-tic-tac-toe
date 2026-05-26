@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rubik's Tic-Tac-Toe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- WebGL Canvas Background/Main Viewport -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Panel (Glassmorphic) -->
+    <div class="sidebar">
+      <header class="app-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+          <h1>RUBIK'S <span class="glow-text">3D</span></h1>
+          <button class="btn btn-sm btn-icon" id="btn-sound-toggle" title="Toggle Sound" onclick="toggleSound()">
+            <svg id="sound-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path id="sound-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </button>
+        </div>
+        <h2>TIC-TAC-TOE</h2>
+        <div class="subtitle">A spatial dimension of strategy</div>
+      </header>
+
+      <!-- Game Config / Mode Selector -->
+      <section class="game-config card">
+        <h3>GAME MODE</h3>
+        <div class="btn-group">
+          <button id="mode-2p" class="btn active" onclick="setGameMode('2p')">PLAYER TO PLAYER</button>
+          <button id="mode-ai" class="btn" onclick="setGameMode('ai')">VS COMPUTER</button>
+        </div>
+        
+        <!-- Difficulty Selector -->
+        <div id="difficulty-selector-container" class="difficulty-container collapsed" style="margin-top: 15px;">
+          <h3 style="margin-bottom: 8px;">DIFFICULTY</h3>
+          <div class="btn-group-3">
+            <button id="diff-easy" class="btn btn-sm" onclick="setDifficulty('easy')">EASY</button>
+            <button id="diff-medium" class="btn btn-sm active" onclick="setDifficulty('medium')">MEDIUM</button>
+            <button id="diff-hard" class="btn btn-sm" onclick="setDifficulty('hard')">HARD</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Turn Indicator / State -->
+      <section class="game-status card">
+        <div class="players-display">
+          <div id="player1-card" class="player-card active x-turn">
+            <span class="player-symbol">X</span>
+            <div class="player-info">
+              <span class="player-name">Player 1</span>
+              <span class="player-role">X</span>
+            </div>
+          </div>
+          <div class="vs">VS</div>
+          <div id="player2-card" class="player-card o-turn">
+            <span class="player-symbol">O</span>
+            <div class="player-info">
+              <span id="p2-name" class="player-name">Player 2</span>
+              <span class="player-role">O</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="turn-action-indicator" class="action-banner">
+          <span class="action-pulse"></span>
+          <span id="action-text">Player 1: Place your mark!</span>
+        </div>
+      </section>
+
+      <!-- Player Customization Profile Settings -->
+      <section class="player-customization card">
+        <h3>PLAYER PROFILES</h3>
+        
+        <!-- Player 1 Profile Customizer -->
+        <div class="custom-player-row">
+          <div class="player-avatar-preview" id="p1-avatar-preview" style="border-color: var(--p1-color); background: rgba(0, 243, 255, 0.05); color: var(--p1-color);">X</div>
+          <div class="player-inputs">
+            <input type="text" id="input-p1-name" class="input-field" value="Player 1" oninput="onPlayerCustomizationChange()" placeholder="Player 1 Name" maxlength="12">
+            <div class="color-picker-group">
+              <button class="color-dot active" style="background-color: #00f3ff; color: #00f3ff;" onclick="setPlayerColor(1, '#00f3ff', this)" title="Neon Cyan"></button>
+              <button class="color-dot" style="background-color: #39ff14; color: #39ff14;" onclick="setPlayerColor(1, '#39ff14', this)" title="Neon Green"></button>
+              <button class="color-dot" style="background-color: #ffd60a; color: #ffd60a;" onclick="setPlayerColor(1, '#ffd60a', this)" title="Neon Yellow"></button>
+              <button class="color-dot" style="background-color: #ff9f0a; color: #ff9f0a;" onclick="setPlayerColor(1, '#ff9f0a', this)" title="Neon Orange"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player 2 Profile Customizer -->
+        <div class="custom-player-row" id="p2-custom-row" style="margin-top: 15px;">
+          <div class="player-avatar-preview" id="p2-avatar-preview" style="border-color: var(--p2-color); background: rgba(255, 0, 127, 0.05); color: var(--p2-color);">O</div>
+          <div class="player-inputs">
+            <input type="text" id="input-p2-name" class="input-field" value="Player 2" oninput="onPlayerCustomizationChange()" placeholder="Player 2 Name" maxlength="12">
+            <div class="color-picker-group">
+              <button class="color-dot active" style="background-color: #ff007f; color: #ff007f;" onclick="setPlayerColor(2, '#ff007f', this)" title="Neon Pink"></button>
+              <button class="color-dot" style="background-color: #a020f0; color: #a020f0;" onclick="setPlayerColor(2, '#a020f0', this)" title="Neon Purple"></button>
+              <button class="color-dot" style="background-color: #ff3b30; color: #ff3b30;" onclick="setPlayerColor(2, '#ff3b30', this)" title="Neon Red"></button>
+              <button class="color-dot" style="background-color: #00fa9a; color: #00fa9a;" onclick="setPlayerColor(2, '#00fa9a', this)" title="Neon Mint"></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cube Controls -->
+      <section class="cube-controls card">
+        <div class="section-title-with-actions">
+          <h3>LAYER ROTATIONS</h3>
+          <button class="btn btn-sm btn-icon" id="btn-camera-reset" title="Reset View" onclick="resetCamera()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div class="controls-grid">
+          <!-- Up layer -->
+          <button class="btn btn-control" data-layer="U" data-dir="1" onclick="rotateLayer('U', 1)" onmouseenter="showRotationPreview('U', 1)" onmouseleave="clearRotationPreview()">U <small>(Up ↻)</small></button>
+          <button class="btn btn-control" data-layer="U" data-dir="-1" onclick="rotateLayer('U', -1)" onmouseenter="showRotationPreview('U', -1)" onmouseleave="clearRotationPreview()">U' <small>(Up ↺)</small></button>
+          <!-- Down layer -->
+          <button class="btn btn-control" data-layer="D" data-dir="1" onclick="rotateLayer('D', 1)" onmouseenter="showRotationPreview('D', 1)" onmouseleave="clearRotationPreview()">D <small>(Down ↻)</small></button>
+          <button class="btn btn-control" data-layer="D" data-dir="-1" onclick="rotateLayer('D', -1)" onmouseenter="showRotationPreview('D', -1)" onmouseleave="clearRotationPreview()">D' <small>(Down ↺)</small></button>
+          <!-- Left layer -->
+          <button class="btn btn-control" data-layer="L" data-dir="1" onclick="rotateLayer('L', 1)" onmouseenter="showRotationPreview('L', 1)" onmouseleave="clearRotationPreview()">L <small>(Left ↻)</small></button>
+          <button class="btn btn-control" data-layer="L" data-dir="-1" onclick="rotateLayer('L', -1)" onmouseenter="showRotationPreview('L', -1)" onmouseleave="clearRotationPreview()">L' <small>(Left ↺)</small></button>
+          <!-- Right layer -->
+          <button class="btn btn-control" data-layer="R" data-dir="1" onclick="rotateLayer('R', 1)" onmouseenter="showRotationPreview('R', 1)" onmouseleave="clearRotationPreview()">R <small>(Right ↻)</small></button>
+          <button class="btn btn-control" data-layer="R" data-dir="-1" onclick="rotateLayer('R', -1)" onmouseenter="showRotationPreview('R', -1)" onmouseleave="clearRotationPreview()">R' <small>(Right ↺)</small></button>
+          <!-- Front layer -->
+          <button class="btn btn-control" data-layer="F" data-dir="1" onclick="rotateLayer('F', 1)" onmouseenter="showRotationPreview('F', 1)" onmouseleave="clearRotationPreview()">F <small>(Front ↻)</small></button>
+          <button class="btn btn-control" data-layer="F" data-dir="-1" onclick="rotateLayer('F', -1)" onmouseenter="showRotationPreview('F', -1)" onmouseleave="clearRotationPreview()">F' <small>(Front ↺)</small></button>
+          <!-- Back layer -->
+          <button class="btn btn-control" data-layer="B" data-dir="1" onclick="rotateLayer('B', 1)" onmouseenter="showRotationPreview('B', 1)" onmouseleave="clearRotationPreview()">B <small>(Back ↻)</small></button>
+          <button class="btn btn-control" data-layer="B" data-dir="-1" onclick="rotateLayer('B', -1)" onmouseenter="showRotationPreview('B', -1)" onmouseleave="clearRotationPreview()">B' <small>(Back ↺)</small></button>
+          <!-- Middle slice -->
+          <button class="btn btn-control" data-layer="M" data-dir="1" onclick="rotateLayer('M', 1)" onmouseenter="showRotationPreview('M', 1)" onmouseleave="clearRotationPreview()">M <small>(Middle ↻)</small></button>
+          <button class="btn btn-control" data-layer="M" data-dir="-1" onclick="rotateLayer('M', -1)" onmouseenter="showRotationPreview('M', -1)" onmouseleave="clearRotationPreview()">M' <small>(Middle ↺)</small></button>
+          <!-- Equator slice -->
+          <button class="btn btn-control" data-layer="E" data-dir="1" onclick="rotateLayer('E', 1)" onmouseenter="showRotationPreview('E', 1)" onmouseleave="clearRotationPreview()">E <small>(Equator ↻)</small></button>
+          <button class="btn btn-control" data-layer="E" data-dir="-1" onclick="rotateLayer('E', -1)" onmouseenter="showRotationPreview('E', -1)" onmouseleave="clearRotationPreview()">E' <small>(Equator ↺)</small></button>
+          <!-- Standing slice -->
+          <button class="btn btn-control" data-layer="S" data-dir="1" onclick="rotateLayer('S', 1)" onmouseenter="showRotationPreview('S', 1)" onmouseleave="clearRotationPreview()">S <small>(Standing ↻)</small></button>
+          <button class="btn btn-control" data-layer="S" data-dir="-1" onclick="rotateLayer('S', -1)" onmouseenter="showRotationPreview('S', -1)" onmouseleave="clearRotationPreview()">S' <small>(Standing ↺)</small></button>
+        </div>
+      </section>
+
+      <!-- Rules and Instructions Tab -->
+      <section class="instructions card">
+        <h3>HOW TO PLAY</h3>
+        <ul>
+          <li><strong>Step 1:</strong> Click any empty white sticker on the cube to place your mark.</li>
+          <li><strong>Step 2:</strong> Press a button above to rotate one of the cube layers.</li>
+          <li><strong>Goal:</strong> Get 3 of your marks in a row on <em>any single 3x3 face</em>.</li>
+          <li><strong>Rule:</strong> Victory is evaluated only <em>after</em> the rotation is finished!</li>
+        </ul>
+      </section>
+
+      <!-- Game Actions / Footer -->
+      <footer class="app-footer">
+        <button id="btn-restart" class="btn btn-danger" onclick="restartGame()">RESTART MATCH</button>
+        <div class="dev-credits">Built with HTML5 & Three.js 3D</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Win / Game Over Overlay Modal -->
+  <div id="game-over-modal" class="modal-overlay hidden">
+    <div class="modal-content glass">
+      <div id="winner-banner" class="winner-glow"></div>
+      <h2 id="modal-title">VICTORY DETECTED!</h2>
+      <p id="modal-message">Player 1 has achieved 3-in-a-row on the Up Face!</p>
+      <div class="modal-stats">
+        <div>Turns: <span id="stat-turns" class="highlight-val">0</span></div>
+        <div>Active Mode: <span id="stat-mode" class="highlight-val">Player to Player</span></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button class="btn btn-large" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border-color: var(--border-color);" onclick="minimizeModal()">REVIEW BOARD</button>
+        <button class="btn btn-primary btn-large" onclick="closeModalAndRestart()">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Review Board Banner -->
+  <div id="review-banner" class="review-banner hidden" onclick="restoreModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ffd60a;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <span>Reviewing Cube. Click to return to menu.</span>
+  </div>
+
+  <!-- Three.js CDN Setup via Import Maps -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
