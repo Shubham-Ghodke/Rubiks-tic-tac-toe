@@ -22,7 +22,7 @@ The game introduces a unique spatial turn-based rule system:
 
 * **3D Interactive Viewport**: Rotate, zoom, and inspect the Rubik's Cube in real-time with smooth drag controls.
 * **Holographic Direction Previews**: Hovering over layer rotation buttons casts dynamic 3D pointer arrows and glowing ring segments showing the exact direction of rotation.
-* **AI Opponent (Single Player)**: Play against a smart computer opponent featuring three difficulty levels:
+* **Computer Opponent (Single Player)**: Play against a smart, rule-based computer opponent featuring three difficulty levels:
   - **Easy**: Random placements and rotations.
   - **Medium**: 50% strategic heuristics, 50% random moves.
   - **Hard**: 100% computed minimax heuristic depth search (attempts to block you and secure direct wins).
